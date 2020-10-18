@@ -1,0 +1,30 @@
+---
+ name: Setup Tomcat8 and deploy artifact
+ hosts: 13.127.99.70
+ tasks:
+  - name:Install Tomcat8 and dependecies
+    package:
+	  name: "{{item}}"
+	  state: latest
+	  update_cache: yes
+	with_items:
+	  - tomcat8
+	  - tomcat8-admin
+	  - tomcat8-docs
+	  - tomcat8-common
+	  
+  - name:Start & Enable tomcat svc
+    Service:
+	  name:tomcat8
+	  state: started
+	  enabled: yes
+  - name: Deploy vprofile artifact
+    copy:
+	  src:/var/jenkins_home/.m2/repository/com/nijjwal/SimpleMavenJunitWebApp/1.0-SNAPSHOT/SimpleMavenJunitWebApp-1.0-SNAPSHOT.war
+	  dest: /var/lib/tomcat8/webapps/ROOT.war
+	  register: deploy_info
+  - name: Restart Tomcat
+     service:
+	   name: tomcat8
+	   state: restarted
+	   when: deploy_info.changed
